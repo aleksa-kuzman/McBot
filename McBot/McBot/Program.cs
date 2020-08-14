@@ -1,4 +1,5 @@
 ﻿using MC_Server_Starter.Gateway.Payloads;
+using McBot.Gateway.Payloads;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MC_Server_Starter
 {
-    internal class Program
+    public class Program
     {
         private static void Main(string[] args)
         {

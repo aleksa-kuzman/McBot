@@ -2,7 +2,7 @@
 
 namespace MC_Server_Starter.Gateway.Payloads
 {
-    internal class GatewayResource
+    public class GatewayResource
     {
         public string Url { get; set; }
         public int Shards { get; set; }
