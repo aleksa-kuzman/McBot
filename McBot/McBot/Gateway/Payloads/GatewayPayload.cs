@@ -1,4 +1,4 @@
-﻿namespace McBot.Gateway
+﻿namespace McBot.Gateway.Payloads
 {
     public class GatewayPayload
     {

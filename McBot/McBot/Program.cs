@@ -1,5 +1,4 @@
-﻿using MC_Server_Starter.Gateway;
-using McBot.Gateway;
+﻿using MC_Server_Starter.Gateway.Payloads;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
 using System;

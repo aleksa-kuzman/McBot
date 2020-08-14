@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MC_Server_Starter.Gateway
+namespace MC_Server_Starter.Gateway.Payloads
 {
     internal class GatewayResource
     {
