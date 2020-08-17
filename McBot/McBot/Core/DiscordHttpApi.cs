@@ -9,19 +9,20 @@ namespace McBot.Core
 {
     public class DiscordHttpApi : IDiscordHttpApi
     {
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactpry;
 
-        public DiscordHttpApi(HttpClient httpClient)
+        public DiscordHttpApi(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClientFactpry = httpClientFactory;
         }
 
         public async Task<GatewayResource> GetWebSocketBotGateway()
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bot", "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw");
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "myTestAp | this is a");
+            var httpClient = _httpClientFactpry.CreateClient("API");
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bot", "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "myTestAp | this is a");
 
-            HttpResponseMessage message = await _httpClient.GetAsync("https://discord.com/api/gateway/bot");
+            HttpResponseMessage message = await httpClient.GetAsync("https://discord.com/api/gateway/bot");
             var somethingElse = JsonConvert.DeserializeObject<GatewayResource>(await message.Content.ReadAsStringAsync());
 
             Console.WriteLine(somethingElse);

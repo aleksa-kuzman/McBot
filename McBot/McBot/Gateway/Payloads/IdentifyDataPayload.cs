@@ -2,8 +2,8 @@
 {
     public class IdentifyDataPayload
     {
-        public string Token { get; set; }
+        public string token { get; set; }
 
-        public IdentifyDataPayloadProperties Properties { get; set; }
+        public IdentifyDataPayloadProperties properties { get; set; }
     }
 }

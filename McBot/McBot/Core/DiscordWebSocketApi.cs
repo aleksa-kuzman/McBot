@@ -36,6 +36,7 @@ namespace McBot.Core
             var jsonSettings = new JsonSerializerSettings();
             jsonSettings.NullValueHandling = NullValueHandling.Ignore;
             var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+            Console.WriteLine(json);
             var bytes = Encoding.UTF8.GetBytes(json);
             await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -47,12 +48,13 @@ namespace McBot.Core
                 GatewayPayload payload = new GatewayPayload();
                 payload.op = 2;
                 var dataPayload = new IdentifyDataPayload();
-                dataPayload.Token = "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw";
-                dataPayload.Properties = new IdentifyDataPayloadProperties("linux", "my_library", "MyClient");
+                dataPayload.token = "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw";
+                dataPayload.properties = new IdentifyDataPayloadProperties("linux", "my_library", "MyClient");
 
                 payload.d = dataPayload;
 
                 await SendPayload(payload);
+
                 var recievedPayload = await RecievePayload();
 
                 return recievedPayload;
@@ -67,9 +69,9 @@ namespace McBot.Core
         {
             GatewayPayload payload = new GatewayPayload();
             payload.op = 1;
-
+            payload.d = 251;
             Thread.Sleep(wait);
-
+            //  await Task.Delay(wait);
             await SendPayload(payload);
 
             var response = await RecievePayload();

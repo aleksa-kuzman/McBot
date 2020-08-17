@@ -1,5 +1,4 @@
 ﻿using McBot.Contracts;
-using McBot.Gateway.Payloads;
 using System.Threading.Tasks;
 
 namespace McBot.Core
@@ -22,7 +21,7 @@ namespace McBot.Core
 
             if (conected != null)
             {
-                var response = await _discordWebSocketApi.SendHearthBeat(((Hearthbeat)conected.d).HearthBeat);
+                var response = _discordWebSocketApi.SendHearthBeat(41250);
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
@@ -34,7 +33,7 @@ namespace McBot.Core
 
             while (true)
             {
-                var response = await _discordWebSocketApi.SendHearthBeat(((Hearthbeat)conected.d).HearthBeat);
+                var response = _discordWebSocketApi.SendHearthBeat(41250);
             }
         }
     }
