@@ -1,12 +1,14 @@
-﻿using System.Net.WebSockets;
+﻿using McBot.Gateway.Payloads;
 using System.Threading.Tasks;
 
 namespace McBot.Contracts
 {
     public interface IDiscordWebSocketApi
     {
-        Task<bool> ConnectToSocketApi(string uri);
+        Task<GatewayPayload> ConnectToSocketApi(string uri);
 
-        Task IdentifyToSocket(string uri, ClientWebSocket clientWebSocket);
+        Task<GatewayPayload> IdentifyToSocket(string uri);
+
+        Task<GatewayPayload> SendHearthBeat(int wait);
     }
 }

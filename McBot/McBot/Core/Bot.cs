@@ -1,4 +1,5 @@
 ﻿using McBot.Contracts;
+using McBot.Gateway.Payloads;
 using System.Threading.Tasks;
 
 namespace McBot.Core
@@ -6,14 +7,35 @@ namespace McBot.Core
     public class Bot
     {
         private readonly IDiscordHttpApi _discordApi;
+        private readonly IDiscordWebSocketApi _discordWebSocketApi;
+
+        public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi)
+        {
+            _discordApi = discordApi;
+            _discordWebSocketApi = discordWebSocketApi;
+        }
 
         public async Task RunAsync()
         {
-        }
+            var gateway = await _discordApi.GetWebSocketBotGateway();
+            var conected = await _discordWebSocketApi.ConnectToSocketApi(gateway.Url);
 
-        public Bot(IDiscordHttpApi discordApi)
-        {
-            _discordApi = discordApi;
+            if (conected != null)
+            {
+                var response = await _discordWebSocketApi.SendHearthBeat(((Hearthbeat)conected.d).HearthBeat);
+
+                var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
+
+                if (identification.op == 9)
+                {
+                    throw new System.Exception("API RETURNED OPCODE 9");
+                }
+            }
+
+            while (true)
+            {
+                var response = await _discordWebSocketApi.SendHearthBeat(((Hearthbeat)conected.d).HearthBeat);
+            }
         }
     }
 }

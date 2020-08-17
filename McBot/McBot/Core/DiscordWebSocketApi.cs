@@ -19,17 +19,28 @@ namespace McBot.Core
             _clientWebSocket = clientWebSocket;
         }
 
-        public async Task<bool> ConnectToSocketApi(string uri)
+        public async Task<GatewayPayload> ConnectToSocketApi(string uri)
         {
             await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
             var payload = await RecievePayload();
             if (payload.op == 10)
-                return true;
+            {
+                return payload;
+            }
             else
-                return false;
+                throw new Exception("Error");
         }
 
-        public async Task IdentifyToSocket(string uri, ClientWebSocket clientWebSocket)
+        private async Task SendPayload(GatewayPayload payload)
+        {
+            var jsonSettings = new JsonSerializerSettings();
+            jsonSettings.NullValueHandling = NullValueHandling.Ignore;
+            var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        public async Task<GatewayPayload> IdentifyToSocket(string uri)
         {
             try
             {
@@ -41,18 +52,29 @@ namespace McBot.Core
 
                 payload.d = dataPayload;
 
-                var jsonSettings = new JsonSerializerSettings();
-                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
-                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
-                var bytes = Encoding.UTF8.GetBytes(json);
-                await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
-
+                await SendPayload(payload);
                 var recievedPayload = await RecievePayload();
+
+                return recievedPayload;
             }
             catch (Exception ex)
             {
                 throw;
             }
+        }
+
+        public async Task<GatewayPayload> SendHearthBeat(int wait)
+        {
+            GatewayPayload payload = new GatewayPayload();
+            payload.op = 1;
+
+            Thread.Sleep(wait);
+
+            await SendPayload(payload);
+
+            var response = await RecievePayload();
+
+            return response;
         }
 
         private async Task<GatewayPayload> RecievePayload()

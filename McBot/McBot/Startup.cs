@@ -20,6 +20,7 @@ namespace MC_Server_Starter
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
             });
             services.AddTransient<IDiscordHttpApi, DiscordHttpApi>();
+            services.AddTransient(typeof(Bot));
             services.AddClientWebSocket();
         }
 
