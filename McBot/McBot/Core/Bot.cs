@@ -16,6 +16,7 @@ namespace McBot.Core
             _discordWebSocketApi = discordWebSocketApi;
         }
 
+        //TODO: Need to refactor connection logic away from the bot, still is a little too messy
         public async Task RunAsync()
         {
             var gateway = await _discordApi.GetWebSocketBotGateway();
