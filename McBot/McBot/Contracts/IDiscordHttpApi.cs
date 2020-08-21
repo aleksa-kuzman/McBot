@@ -1,4 +1,5 @@
 ﻿using MC_Server_Starter.Gateway.Payloads;
+using McBot.HttpApi.Payloads;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -8,6 +9,6 @@ namespace McBot.Contracts
     {
         public Task<GatewayResource> GetWebSocketBotGateway();
 
-        Task<HttpResponseMessage> CreateMessage();
+        Task<HttpResponseMessage> CreateMessage(Message message);
     }
 }

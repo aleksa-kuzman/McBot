@@ -1,4 +1,5 @@
 ﻿using McBot.Contracts;
+using McBot.HttpApi.Payloads;
 using System;
 using System.Threading.Tasks;
 
@@ -30,7 +31,8 @@ namespace McBot.Core
                 {
                     throw new System.Exception("API RETURNED OPCODE 9");
                 }
-                var createResponse = await _discordApi.CreateMessage();
+                Message testMessage = new Message("Hello everybody", false, null);
+                var createResponse = await _discordApi.CreateMessage(testMessage);
 
                 Console.WriteLine(await createResponse.Content.ReadAsStringAsync());
             }

@@ -70,8 +70,8 @@ namespace McBot.Core
             GatewayPayload payload = new GatewayPayload();
             payload.op = 1;
             payload.d = 251;
-            //Thread.Sleep(wait);
-            //  await Task.Delay(wait);
+
+            await Task.Delay(wait);
             await SendPayload(payload);
 
             var response = await RecievePayload();
