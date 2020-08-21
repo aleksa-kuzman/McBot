@@ -31,8 +31,9 @@ namespace McBot.Core
                 {
                     throw new System.Exception("API RETURNED OPCODE 9");
                 }
-                else if (identification.op == 1)
+                else if (identification.op == 0)
                 {
+                    Console.WriteLine(identification.Ready.session_id);
                 }
                 Message testMessage = new Message("Hello everybody", false, null);
                 var createResponse = await _discordApi.CreateMessage(testMessage);
