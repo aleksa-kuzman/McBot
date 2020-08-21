@@ -9,6 +9,6 @@ namespace McBot.Contracts
 
         Task<GatewayPayload> IdentifyToSocket(string uri);
 
-        Task<GatewayPayload> SendHearthBeat(int wait);
+        Task SendHearthBeat(int wait);
     }
 }

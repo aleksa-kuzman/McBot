@@ -1,11 +1,13 @@
-﻿namespace McBot.Gateway.Payloads
+﻿using Newtonsoft.Json;
+
+namespace McBot.Gateway.Payloads
 {
     public class GatewayPayload
     {
         /// <summary>
         /// Opcode for payload
         /// </summary>
-        public int op { get; set; }
+        public OpCode op { get; set; }
 
         /// <summary>
         /// Event data
@@ -16,12 +18,25 @@
         {
             get
             {
-                if (op == 0)
-                    return (IdentifyRecieveReadyPayload)d;
+                if (op == OpCode.Ready)
+                    return JsonConvert.DeserializeObject<IdentifyRecieveReadyPayload>(d.ToString());
                 else
                     return null;
             }
             set { }
+        }
+
+        public GatewayHello GatewayHello
+        {
+            get
+            {
+                if (op == OpCode.Hello)
+                {
+                    return JsonConvert.DeserializeObject<GatewayHello>(d.ToString());
+                }
+                else
+                    return null;
+            }
         }
 
         /// <summary>

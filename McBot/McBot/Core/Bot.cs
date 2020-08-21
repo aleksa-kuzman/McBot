@@ -23,11 +23,11 @@ namespace McBot.Core
 
             if (conected != null)
             {
-                var response = _discordWebSocketApi.SendHearthBeat(41250);
+                _ = _discordWebSocketApi.SendHearthBeat(conected.GatewayHello.heartbeat_interval);
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
-                if (identification.op == 9)
+                if (identification.op == OpCode.InvalidSession)
                 {
                     throw new System.Exception("API RETURNED OPCODE 9");
                 }

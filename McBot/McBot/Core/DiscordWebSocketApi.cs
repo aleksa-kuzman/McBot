@@ -23,7 +23,7 @@ namespace McBot.Core
         {
             await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
             var payload = await RecievePayload();
-            if (payload.op == 10)
+            if (payload.op == OpCode.Hello)
             {
                 return payload;
             }
@@ -46,7 +46,7 @@ namespace McBot.Core
             try
             {
                 GatewayPayload payload = new GatewayPayload();
-                payload.op = 2;
+                payload.op = OpCode.Identify;
                 var dataPayload = new IdentifyDataPayload();
                 dataPayload.token = "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw";
                 dataPayload.properties = new IdentifyDataPayloadProperties("linux", "my_library", "MyClient");
@@ -65,18 +65,19 @@ namespace McBot.Core
             }
         }
 
-        public async Task<GatewayPayload> SendHearthBeat(int wait)
+        public async Task SendHearthBeat(int wait)
         {
-            GatewayPayload payload = new GatewayPayload();
-            payload.op = 1;
-            payload.d = 251;
+            while (true)
+            {
+                GatewayPayload payload = new GatewayPayload();
+                payload.op = OpCode.HeartBeat;
+                payload.d = 251;
 
-            await Task.Delay(wait);
-            await SendPayload(payload);
+                await Task.Delay(wait);
+                await SendPayload(payload);
 
-            var response = await RecievePayload();
-
-            return response;
+                var response = await RecievePayload();
+            }
         }
 
         private async Task<GatewayPayload> RecievePayload()
