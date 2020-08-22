@@ -3,6 +3,7 @@ using McBot.Core;
 using McBot.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -10,8 +11,17 @@ namespace MC_Server_Starter
 {
     public class Startup
     {
+        public static IConfiguration Configuration { get; set; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
+            var a = Configuration.GetValue<string>("Key");
+
             services.AddMvcCore();
             services.AddHttpClient("DiscordHttpApi", c =>
             {
