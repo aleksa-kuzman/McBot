@@ -1,5 +1,6 @@
 ﻿using McBot.Contracts;
 using McBot.Gateway.Payloads;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -13,10 +14,12 @@ namespace McBot.Core
     public class DiscordWebSocketApi : IDiscordWebSocketApi
     {
         private readonly ClientWebSocket _clientWebSocket;
+        private readonly IOptions<AppSettings> _options;
 
-        public DiscordWebSocketApi(ClientWebSocket clientWebSocket)
+        public DiscordWebSocketApi(ClientWebSocket clientWebSocket, IOptions<AppSettings> options)
         {
             _clientWebSocket = clientWebSocket;
+            _options = options;
         }
 
         public async Task<GatewayPayload> ConnectToSocketApi(string uri)
@@ -48,7 +51,7 @@ namespace McBot.Core
                 GatewayPayload payload = new GatewayPayload();
                 payload.op = OpCode.Identify;
                 var dataPayload = new IdentifyDataPayload();
-                dataPayload.token = "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw";
+                dataPayload.token = _options.Value.BotToken;
                 dataPayload.properties = new IdentifyDataPayloadProperties("linux", "my_library", "MyClient");
 
                 payload.d = dataPayload;

@@ -1,4 +1,5 @@
-﻿using McBot.Contracts;
+﻿using McBot;
+using McBot.Contracts;
 using McBot.Core;
 using McBot.Extensions;
 using Microsoft.AspNetCore.Builder;
@@ -20,13 +21,11 @@ namespace MC_Server_Starter
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var a = Configuration.GetValue<string>("Key");
-
-            services.AddMvcCore();
+            services.Configure<AppSettings>(Configuration);
             services.AddHttpClient("DiscordHttpApi", c =>
             {
                 c.BaseAddress = new Uri("https://discord.com/api/");
-                c.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bot", "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw");
+                c.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bot", Configuration.GetSection("BotToken").Value);
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
             });
 
@@ -38,6 +37,7 @@ namespace MC_Server_Starter
             services.AddTransient<IDiscordWebSocketApi, DiscordWebSocketApi>();
             services.AddTransient(typeof(Bot));
             services.AddClientWebSocket();
+            services.AddMvcCore();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
