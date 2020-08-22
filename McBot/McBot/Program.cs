@@ -12,7 +12,7 @@ namespace MC_Server_Starter
         {
             RunKestrel().Wait();
 
-            Console.ReadKey();
+            Console.Read();
         }
 
         private static async Task RunKestrel()
