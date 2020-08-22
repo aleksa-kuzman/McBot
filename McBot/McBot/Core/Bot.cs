@@ -1,6 +1,7 @@
 ﻿using McBot.Contracts;
 using McBot.HttpApi.Payloads;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace McBot.Core
@@ -9,11 +10,23 @@ namespace McBot.Core
     {
         private readonly IDiscordHttpApi _discordApi;
         private readonly IDiscordWebSocketApi _discordWebSocketApi;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi)
+        public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi, IHttpClientFactory httpClientFactory)
         {
             _discordApi = discordApi;
             _discordWebSocketApi = discordWebSocketApi;
+            _httpClientFactory = httpClientFactory;
+        }
+
+        public async Task<string> GetMyIp()
+        {
+            HttpClient client = _httpClientFactory.CreateClient("WhatisMyIpApi");
+
+            HttpResponseMessage message = await client.GetAsync("");
+            string ipAddress = await message.Content.ReadAsStringAsync();
+
+            return ipAddress;
         }
 
         //TODO: Need to refactor connection logic away from the bot, still is a little too messy
@@ -36,15 +49,11 @@ namespace McBot.Core
                 {
                     Console.WriteLine(identification.Ready.session_id);
                 }
-                Message testMessage = new Message("Hello everybody", false, null);
+
+                Message testMessage = new Message("Hello everybody, current server" + " IpAddress: " + await GetMyIp(), false, null);
                 var createResponse = await _discordApi.CreateMessage(testMessage);
 
                 Console.WriteLine(await createResponse.Content.ReadAsStringAsync());
-            }
-
-            while (true)
-            {
-                var response = _discordWebSocketApi.SendHearthBeat(41250);
             }
         }
     }

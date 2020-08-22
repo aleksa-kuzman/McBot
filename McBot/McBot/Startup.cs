@@ -19,6 +19,11 @@ namespace MC_Server_Starter
                 c.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bot", "NzQxMzUyOTczMTAzMjY3OTgy.Xy2Uwg.OSMLFuKsMX399XwkW6AiA4KXURw");
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
             });
+
+            services.AddHttpClient("WhatisMyIpApi", c =>
+            {
+                c.BaseAddress = new Uri("http://ipv4.icanhazip.com/");
+            });
             services.AddTransient<IDiscordHttpApi, DiscordHttpApi>();
             services.AddTransient<IDiscordWebSocketApi, DiscordWebSocketApi>();
             services.AddTransient(typeof(Bot));
