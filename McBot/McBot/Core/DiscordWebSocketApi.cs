@@ -22,16 +22,16 @@ namespace McBot.Core
             _options = options;
         }
 
-        public async Task<GatewayPayload> ConnectToSocketApi(string uri)
+        public async Task<GatewayHello> ConnectToSocketApi(string uri)
         {
             await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
             var payload = await RecievePayload();
             if (payload.op == OpCode.Hello)
             {
-                return payload;
+                return payload.GatewayHello;
             }
             else
-                throw new Exception("Error");
+                throw new NullReferenceException("Gateway hello is null something is  not right");
         }
 
         private async Task SendPayload(GatewayPayload payload)
@@ -44,7 +44,7 @@ namespace McBot.Core
             await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        public async Task<GatewayPayload> IdentifyToSocket(string uri)
+        public async Task<IdentifyRecieveReadyPayload> IdentifyToSocket(string uri)
         {
             try
             {
@@ -59,8 +59,12 @@ namespace McBot.Core
                 await SendPayload(payload);
 
                 var recievedPayload = await RecievePayload();
+                if (recievedPayload.op == OpCode.InvalidSession)
+                {
+                    throw new System.Exception("API RETURNED OPCODE 9");
+                }
 
-                return recievedPayload;
+                return recievedPayload.Ready;
             }
             catch (Exception ex)
             {

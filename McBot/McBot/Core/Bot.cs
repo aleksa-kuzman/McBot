@@ -44,18 +44,9 @@ namespace McBot.Core
 
             if (conected != null)
             {
-                _ = _discordWebSocketApi.SendHearthBeat(conected.GatewayHello.heartbeat_interval);
+                _ = _discordWebSocketApi.SendHearthBeat(conected.heartbeat_interval);
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
-
-                if (identification.op == OpCode.InvalidSession)
-                {
-                    throw new System.Exception("API RETURNED OPCODE 9");
-                }
-                else if (identification.op == 0)
-                {
-                    Console.WriteLine(identification.Ready.session_id);
-                }
 
                 _ = StartMcServer();
             }
@@ -74,6 +65,7 @@ namespace McBot.Core
                 Server.StartInfo = processInfo;
                 Server.EnableRaisingEvents = true;
                 Server.Exited += new EventHandler(ServerExited);
+                Server.Start();
 
                 if (Server.HasExited == false)
                 {

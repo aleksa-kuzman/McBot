@@ -5,9 +5,9 @@ namespace McBot.Contracts
 {
     public interface IDiscordWebSocketApi
     {
-        Task<GatewayPayload> ConnectToSocketApi(string uri);
+        Task<GatewayHello> ConnectToSocketApi(string uri);
 
-        Task<GatewayPayload> IdentifyToSocket(string uri);
+        Task<IdentifyRecieveReadyPayload> IdentifyToSocket(string uri);
 
         Task SendHearthBeat(int wait);
     }
