@@ -25,6 +25,9 @@ namespace McBot.Core
             _httpClientFactory = httpClientFactory;
             _options = options;
             Server = new Process();
+            _discordWebSocketApi.RespondToCreateMessage += SendNudesRespond;
+            _discordWebSocketApi.RespondToCreateMessage += StartServerRespond;
+            _discordWebSocketApi.RespondToCreateMessage += KillServerRespond;
         }
 
         public async Task<string> GetMyIp()
@@ -37,7 +40,7 @@ namespace McBot.Core
             return ipAddress;
         }
 
-        private async Task RespondToMessages(MessageCreated message)
+        private async Task SendNudesRespond(MessageCreated message)
         {
             if (message != null)
             {
@@ -48,12 +51,39 @@ namespace McBot.Core
             }
         }
 
+        public async Task KillServer()
+        {
+            Server.Kill();
+            var successResponse = await _discordApi.CreateMessage(new Message("You killed a server", false, null));
+        }
+
+        private async Task KillServerRespond(MessageCreated message)
+        {
+            if (message != null)
+            {
+                if (message.Content == "killServer()")
+                {
+                    await KillServer();
+                }
+            }
+        }
+
+        private async Task StartServerRespond(MessageCreated message)
+        {
+            if (message != null)
+            {
+                if (message.Content == "startServer()")
+                {
+                    _ = StartMcServer();
+                }
+            }
+        }
+
         //TODO: Need to refactor connection logic away from the bot, still is a little too messy
         public async Task RunAsync()
         {
             var gateway = await _discordApi.GetWebSocketBotGateway();
             var conected = await _discordWebSocketApi.ConnectToSocketApi(gateway.Url);
-            _discordWebSocketApi.RespondToCreateMessage += RespondToMessages;
 
             if (conected != null)
             {
