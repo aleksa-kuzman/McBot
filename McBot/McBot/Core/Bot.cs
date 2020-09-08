@@ -1,4 +1,5 @@
 ﻿using McBot.Contracts;
+using McBot.Gateway.Payloads;
 using McBot.HttpApi.Payloads;
 using Microsoft.Extensions.Options;
 using System;
@@ -36,11 +37,23 @@ namespace McBot.Core
             return ipAddress;
         }
 
+        private async Task RespondToMessages(MessageCreated message)
+        {
+            if (message != null)
+            {
+                if (message.Content == "sendNudes()")
+                {
+                    var successResponse = await _discordApi.CreateMessage(new Message("Hey don't do that asshole", false, null));
+                }
+            }
+        }
+
         //TODO: Need to refactor connection logic away from the bot, still is a little too messy
         public async Task RunAsync()
         {
             var gateway = await _discordApi.GetWebSocketBotGateway();
             var conected = await _discordWebSocketApi.ConnectToSocketApi(gateway.Url);
+            _discordWebSocketApi.RespondToCreateMessage += RespondToMessages;
 
             if (conected != null)
             {
@@ -48,10 +61,16 @@ namespace McBot.Core
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
-                _ = StartMcServer();
+                //       _ = StartMcServer();
+
+                while (true)
+                {
+                    var test = await _discordWebSocketApi.MessageCreatedEvent();
+                }
             }
         }
 
+        //TODO Refactor Process away from bot
         public async Task StartMcServer()
         {
             try

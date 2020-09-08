@@ -39,6 +39,19 @@ namespace McBot.Gateway.Payloads
             }
         }
 
+        public MessageCreated MessageCreated
+        {
+            get
+            {
+                if (t != null && t == "MESSAGE_CREATE")
+                {
+                    return JsonConvert.DeserializeObject<MessageCreated>(d.ToString());
+                }
+                else
+                    return null;
+            }
+        }
+
         /// <summary>
         /// sequence number, used for resuming sessions and heartbeats
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using McBot.Gateway.Payloads;
+﻿using McBot.Core;
+using McBot.Gateway.Payloads;
 using System.Threading.Tasks;
 
 namespace McBot.Contracts
@@ -10,5 +11,9 @@ namespace McBot.Contracts
         Task<IdentifyRecieveReadyPayload> IdentifyToSocket(string uri);
 
         Task SendHearthBeat(int wait);
+
+        Task<MessageCreated> MessageCreatedEvent();
+
+        public event Respond RespondToCreateMessage;
     }
 }

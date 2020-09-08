@@ -11,10 +11,14 @@ using System.Threading.Tasks;
 
 namespace McBot.Core
 {
+    public delegate Task Respond(MessageCreated message);
+
     public class DiscordWebSocketApi : IDiscordWebSocketApi
     {
         private readonly ClientWebSocket _clientWebSocket;
         private readonly IOptions<AppSettings> _options;
+
+        public event Respond RespondToCreateMessage;
 
         public DiscordWebSocketApi(ClientWebSocket clientWebSocket, IOptions<AppSettings> options)
         {
@@ -72,6 +76,23 @@ namespace McBot.Core
             }
         }
 
+        public async Task<MessageCreated> MessageCreatedEvent()
+        {
+            var gatewayPayload = await RecievePayload();
+
+            if (gatewayPayload.MessageCreated != null)
+            {
+                await OnMessageCreation(gatewayPayload.MessageCreated);
+                return gatewayPayload.MessageCreated;
+            }
+            else return null;
+        }
+
+        protected virtual async Task OnMessageCreation(MessageCreated message)
+        {
+            RespondToCreateMessage?.Invoke(message);
+        }
+
         public async Task SendHearthBeat(int wait)
         {
             while (true)
@@ -82,8 +103,6 @@ namespace McBot.Core
 
                 await Task.Delay(wait);
                 await SendPayload(payload);
-
-                var response = await RecievePayload();
             }
         }
 
