@@ -43,7 +43,7 @@ namespace McBot.Gateway.Payloads
         {
             get
             {
-                if (t != null && t == "MESSAGE_CREATE")
+                if (t != null && t == GatewayEvents.MessageCreated.Value)
                 {
                     return JsonConvert.DeserializeObject<MessageCreated>(d.ToString());
                 }

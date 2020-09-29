@@ -45,8 +45,6 @@ namespace McBot.Worker
                     services.AddSingleton<IDiscordWebSocketApi, DiscordWebSocketApi>();
                     services.AddTransient(typeof(Bot));
                     services.AddHostedService<Worker>();
-
-                    //services.AddMvcCore();
                 });
     }
 }
