@@ -91,7 +91,7 @@ namespace McBot.Core
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
-                //       _ = StartMcServer();
+                _ = StartMcServer();
 
                 while (true)
                 {
