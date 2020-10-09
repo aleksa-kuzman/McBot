@@ -16,7 +16,7 @@ namespace McBot.Core
         private readonly IDiscordWebSocketApi _discordWebSocketApi;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IOptions<AppSettings> _options;
-        private readonly Process Server;
+        private Process Server;
 
         public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi, IHttpClientFactory httpClientFactory, IOptions<AppSettings> options)
         {
@@ -55,6 +55,9 @@ namespace McBot.Core
         {
             Server.Kill();
             var successResponse = await _discordApi.CreateMessage(new Message("You killed a server", false, null), _options.Value.ChannelId);
+            Server.Dispose();
+
+            Server = new Process();
         }
 
         private async Task KillServerRespond(MessageCreated message)
