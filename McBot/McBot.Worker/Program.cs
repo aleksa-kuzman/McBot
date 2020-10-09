@@ -17,6 +17,7 @@ namespace McBot.Worker
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+            .UseWindowsService()
                 .ConfigureServices((hostContext, services) =>
                 {
                     var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");

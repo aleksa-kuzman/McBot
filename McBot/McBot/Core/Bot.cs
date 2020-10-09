@@ -46,7 +46,7 @@ namespace McBot.Core
             {
                 if (message.Content == "sendNudes()")
                 {
-                    var successResponse = await _discordApi.CreateMessage(new Message("Hey don't do that asshole", false, null));
+                    var successResponse = await _discordApi.CreateMessage(new Message("Hey don't do that asshole", false, null), _options.Value.ChannelId);
                 }
             }
         }
@@ -54,7 +54,7 @@ namespace McBot.Core
         public async Task KillServer()
         {
             Server.Kill();
-            var successResponse = await _discordApi.CreateMessage(new Message("You killed a server", false, null));
+            var successResponse = await _discordApi.CreateMessage(new Message("You killed a server", false, null), _options.Value.ChannelId);
         }
 
         private async Task KillServerRespond(MessageCreated message)
@@ -110,6 +110,7 @@ namespace McBot.Core
                 processInfo.CreateNoWindow = false;
                 processInfo.UseShellExecute = false;
                 processInfo.Arguments = "-Xmx2048M -Xms2048M -jar " + path;
+                processInfo.WorkingDirectory = _options.Value.McServerPath;
 
                 Server.StartInfo = processInfo;
                 Server.EnableRaisingEvents = true;
@@ -119,7 +120,7 @@ namespace McBot.Core
                 if (Server.HasExited == false)
                 {
                     Message successMessage = new Message("Hello everybody, server is up, server" + " IpAddress: " + await GetMyIp(), false, null);
-                    var successResponse = await _discordApi.CreateMessage(successMessage);
+                    var successResponse = await _discordApi.CreateMessage(successMessage, _options.Value.ChannelId);
 
                     Console.WriteLine(await successResponse.Content.ReadAsStringAsync());
                 }
@@ -135,7 +136,7 @@ namespace McBot.Core
             var messageText = $"Server has shut down and is currently down \n";
 
             Message downMessage = new Message(messageText, false, null);
-            _discordApi.CreateMessage(downMessage);
+            _discordApi.CreateMessage(downMessage, _options.Value.ChannelId);
         }
     }
 }

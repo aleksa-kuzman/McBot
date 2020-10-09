@@ -34,7 +34,7 @@ namespace McBot.Core
             return somethingElse;
         }
 
-        public async Task<HttpResponseMessage> CreateMessage(Message message)
+        public async Task<HttpResponseMessage> CreateMessage(Message message, string channelId)
         {
             var httpClient = _httpClientFactpry.CreateClient("DiscordHttpApi");
 
@@ -46,7 +46,7 @@ namespace McBot.Core
             Console.WriteLine(jsonObject);
             HttpContent content = new StringContent(jsonObject, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage responseMessage = await httpClient.PostAsync("channels/741382227249856544/messages", content);
+            HttpResponseMessage responseMessage = await httpClient.PostAsync($"channels/{channelId}/messages", content);
 
             return responseMessage;
         }

@@ -9,6 +9,6 @@ namespace McBot.Contracts
     {
         public Task<GatewayResource> GetWebSocketBotGateway();
 
-        Task<HttpResponseMessage> CreateMessage(Message message);
+        Task<HttpResponseMessage> CreateMessage(Message message, string channelId);
     }
 }
