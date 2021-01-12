@@ -137,7 +137,7 @@ namespace McBot.Core
         private void ServerExited(object sender, System.EventArgs e)
         {
             var messageText = $"Server has shut down and is currently down \n";
-
+            KillServer();
             Message downMessage = new Message(messageText, false, null);
             _discordApi.CreateMessage(downMessage, _options.Value.ChannelId);
         }
