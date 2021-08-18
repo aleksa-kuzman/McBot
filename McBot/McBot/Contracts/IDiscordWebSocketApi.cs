@@ -15,5 +15,7 @@ namespace McBot.Contracts
         Task<MessageCreated> MessageCreatedEvent();
 
         public event Respond RespondToCreateMessage;
+
+        Task ConnectToVoice(VoiceStateUpdate payload);
     }
 }

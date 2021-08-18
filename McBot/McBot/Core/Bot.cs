@@ -25,9 +25,11 @@ namespace McBot.Core
             _httpClientFactory = httpClientFactory;
             _options = options;
             Server = new Process();
+
             _discordWebSocketApi.RespondToCreateMessage += SendNudesRespond;
             _discordWebSocketApi.RespondToCreateMessage += StartServerRespond;
             _discordWebSocketApi.RespondToCreateMessage += KillServerRespond;
+            _discordWebSocketApi.RespondToCreateMessage += VoiceConnectRespond;
         }
 
         public async Task<string> GetMyIp()
@@ -38,6 +40,22 @@ namespace McBot.Core
             string ipAddress = await message.Content.ReadAsStringAsync();
 
             return ipAddress;
+        }
+
+        private async Task VoiceConnectRespond(MessageCreated message)
+        {
+            if (message != null)
+            {
+                if (message.Content == "voiceConnect()")
+                {
+                    var gateway = await _discordApi.GetWebSocketBotGateway();
+
+                    // var successResponse = await _discordApi.CreateMessage(new Message("Connecting to voice channel", false, null), _options.Value.ChannelId);
+
+                    var voiceStateUpdate = new VoiceStateUpdate("741382226746409011", "741382227249856545", false, false);
+                    await _discordWebSocketApi.ConnectToVoice(voiceStateUpdate);
+                }
+            }
         }
 
         private async Task SendNudesRespond(MessageCreated message)
@@ -77,7 +95,7 @@ namespace McBot.Core
             {
                 if (message.Content == "startServer()")
                 {
-                    _ = StartMcServer();
+                    await StartMcServer();
                 }
             }
         }

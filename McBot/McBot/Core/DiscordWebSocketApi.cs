@@ -16,6 +16,7 @@ namespace McBot.Core
     public class DiscordWebSocketApi : IDiscordWebSocketApi
     {
         private readonly ClientWebSocket _clientWebSocket;
+        private ClientWebSocket _voiceWebSocket;
         private readonly IOptions<AppSettings> _options;
 
         public event Respond RespondToCreateMessage;
@@ -40,12 +41,46 @@ namespace McBot.Core
 
         private async Task SendPayload(GatewayPayload payload)
         {
-            var jsonSettings = new JsonSerializerSettings();
-            jsonSettings.NullValueHandling = NullValueHandling.Ignore;
-            var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
-            Console.WriteLine(json);
-            var bytes = Encoding.UTF8.GetBytes(json);
-            await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+            try
+            {
+                var jsonSettings = new JsonSerializerSettings();
+                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
+                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+                Console.WriteLine(json);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task ConnectToVoice(VoiceStateUpdate payload)
+        {
+            try
+            {
+                var gatewayPayload = new GatewayPayload();
+                gatewayPayload.op = OpCode.VoiceStateUpdate;
+                gatewayPayload.d = payload;
+                await SendPayload(gatewayPayload);
+                var response = await RecievePayload();
+                var response2 = await RecievePayload();
+                var response3 = await RecievePayload();
+                var response4 = await RecievePayload();
+                var response5 = await RecievePayload();
+
+                if (response.op == OpCode.Ready)
+                {
+                    Console.WriteLine("It is fine");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+
+                throw;
+            }
         }
 
         public async Task<IdentifyRecieveReadyPayload> IdentifyToSocket(string uri)
@@ -90,7 +125,7 @@ namespace McBot.Core
 
         protected virtual async Task OnMessageCreation(MessageCreated message)
         {
-            RespondToCreateMessage?.Invoke(message);
+            await RespondToCreateMessage?.Invoke(message);
         }
 
         public async Task SendHearthBeat(int wait)
