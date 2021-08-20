@@ -16,6 +16,7 @@ namespace McBot.Core
         private readonly IDiscordWebSocketApi _discordWebSocketApi;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IOptions<AppSettings> _options;
+        private bool forcedExit;
         private Process Server;
 
         public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi, IHttpClientFactory httpClientFactory, IOptions<AppSettings> options)
@@ -25,6 +26,7 @@ namespace McBot.Core
             _httpClientFactory = httpClientFactory;
             _options = options;
             Server = new Process();
+            forcedExit = true;
 
             _discordWebSocketApi.RespondToCreateMessage += SendNudesRespond;
             _discordWebSocketApi.RespondToCreateMessage += StartServerRespond;
@@ -42,18 +44,25 @@ namespace McBot.Core
             return ipAddress;
         }
 
+        // var response = await _discordApi.CreateMessage(new Message(message, false, null), channelId);
+
+        private async Task VoiceConnect()
+        {
+            var gateway = await _discordApi.GetWebSocketBotGateway();
+
+            _ = _discordApi.CreateMessage(new Message("Connecting to voice channel", false, null), _options.Value.ChannelId);
+
+            var voiceStateUpdate = new VoiceStateUpdate("741382226746409011", "741382227249856545", false, false);
+            await _discordWebSocketApi.ConnectToVoice(voiceStateUpdate);
+        }
+
         private async Task VoiceConnectRespond(MessageCreated message)
         {
             if (message != null)
             {
                 if (message.Content == "voiceConnect()")
                 {
-                    var gateway = await _discordApi.GetWebSocketBotGateway();
-
-                    // var successResponse = await _discordApi.CreateMessage(new Message("Connecting to voice channel", false, null), _options.Value.ChannelId);
-
-                    var voiceStateUpdate = new VoiceStateUpdate("741382226746409011", "741382227249856545", false, false);
-                    await _discordWebSocketApi.ConnectToVoice(voiceStateUpdate);
+                    await VoiceConnect();
                 }
             }
         }
@@ -64,17 +73,21 @@ namespace McBot.Core
             {
                 if (message.Content == "sendNudes()")
                 {
-                    var successResponse = await _discordApi.CreateMessage(new Message("Hey don't do that asshole", false, null), _options.Value.ChannelId);
+                    var response = await _discordApi.CreateMessage(new Message("Hey don't do that asshole", false, null), _options.Value.ChannelId);
                 }
             }
         }
 
         public async Task KillServer()
         {
+            forcedExit = false;
             Server.Kill();
-            var successResponse = await _discordApi.CreateMessage(new Message("You killed a server", false, null), _options.Value.ChannelId);
-            Server.Dispose();
+            var response = await _discordApi.CreateMessage(new Message("You killed a server", false, null), _options.Value.ChannelId);
 
+            /* var messageText = $"Server has shut down and is currently down \n";
+             await SendMessageToChannel(messageText, _options.Value.ChannelId);*/
+
+            Server.Dispose();
             Server = new Process();
         }
 
@@ -112,7 +125,7 @@ namespace McBot.Core
 
                 var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
-                _ = StartMcServer();
+                await StartMcServer();
 
                 while (true)
                 {
@@ -140,10 +153,8 @@ namespace McBot.Core
 
                 if (Server.HasExited == false)
                 {
-                    Message successMessage = new Message("Hello everybody, server is up, server" + " IpAddress: " + await GetMyIp(), false, null);
-                    var successResponse = await _discordApi.CreateMessage(successMessage, _options.Value.ChannelId);
-
-                    Console.WriteLine(await successResponse.Content.ReadAsStringAsync());
+                    var response = await _discordApi.CreateMessage(new Message("Hello everybody, server is up, server" + " IpAddress: " + await GetMyIp(), false, null), _options.Value.ChannelId);
+                    var created = await _discordWebSocketApi.MessageCreatedEvent();
                 }
             }
             catch (Exception ex)
@@ -154,10 +165,18 @@ namespace McBot.Core
 
         private void ServerExited(object sender, System.EventArgs e)
         {
-            var messageText = $"Server has shut down and is currently down \n";
-            KillServer();
-            Message downMessage = new Message(messageText, false, null);
-            _discordApi.CreateMessage(downMessage, _options.Value.ChannelId);
+            try
+            {
+                if (forcedExit)
+                {
+                    _ = KillServer();
+                }
+                forcedExit = true;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

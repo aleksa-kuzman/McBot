@@ -52,6 +52,32 @@ namespace McBot.Gateway.Payloads
             }
         }
 
+        public VoiceServerUpdate VoiceServerUpdate
+        {
+            get
+            {
+                if (t != null && t == GatewayEvents.VoiceServerUpdate.Value)
+                {
+                    return JsonConvert.DeserializeObject<VoiceServerUpdate>(d.ToString());
+                }
+                else
+                    return null;
+            }
+        }
+
+        public VoiceStateUpdate VoiceStateUpdate
+        {
+            get
+            {
+                if (t != null && t == GatewayEvents.VoiceStateUpdate.Value)
+                {
+                    return JsonConvert.DeserializeObject<VoiceStateUpdate>(d.ToString());
+                }
+                else
+                    return null;
+            }
+        }
+
         /// <summary>
         /// sequence number, used for resuming sessions and heartbeats
         /// </summary>

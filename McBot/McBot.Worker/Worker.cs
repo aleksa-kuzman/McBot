@@ -1,6 +1,7 @@
 using McBot.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,14 +20,21 @@ namespace McBot.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await _bot.RunAsync();
-
-            while (true)
+            try
             {
-                if (stoppingToken.IsCancellationRequested)
+                await _bot.RunAsync();
+
+                while (true)
                 {
-                    await _bot.KillServer();
+                    /* if (stoppingToken.IsCancellationRequested)
+                     {
+                         await _bot.KillServer();
+                     }*/
                 }
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

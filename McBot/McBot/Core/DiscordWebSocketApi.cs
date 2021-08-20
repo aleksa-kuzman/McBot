@@ -64,15 +64,20 @@ namespace McBot.Core
                 gatewayPayload.op = OpCode.VoiceStateUpdate;
                 gatewayPayload.d = payload;
                 await SendPayload(gatewayPayload);
-                var response = await RecievePayload();
-                var response2 = await RecievePayload();
-                var response3 = await RecievePayload();
-                var response4 = await RecievePayload();
-                var response5 = await RecievePayload();
 
-                if (response.op == OpCode.Ready)
+                object voiceStateUpdate = null;
+                object voiceServerUpdate = null;
+
+                while (voiceServerUpdate == null || voiceServerUpdate == null)
                 {
-                    Console.WriteLine("It is fine");
+                    if (voiceStateUpdate == null)
+                    {
+                        voiceStateUpdate = await GetVoiceStateUpdate();
+                    }
+                    if (voiceServerUpdate == null)
+                    {
+                        voiceServerUpdate = await GetVoiceServerUpdate();
+                    }
                 }
             }
             catch (Exception ex)
@@ -111,16 +116,59 @@ namespace McBot.Core
             }
         }
 
+        public async Task<VoiceStateUpdate> GetVoiceStateUpdate()
+        {
+            try
+            {
+                var gatewayPayload = await RecievePayload();
+
+                if (gatewayPayload.VoiceStateUpdate != null)
+                {
+                    return gatewayPayload.VoiceStateUpdate;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<VoiceServerUpdate> GetVoiceServerUpdate()
+        {
+            try
+            {
+                var gatewayPayload = await RecievePayload();
+
+                if (gatewayPayload.VoiceServerUpdate != null)
+                {
+                    return gatewayPayload.VoiceServerUpdate;
+                }
+                else return null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<MessageCreated> MessageCreatedEvent()
         {
-            var gatewayPayload = await RecievePayload();
-
-            if (gatewayPayload.MessageCreated != null)
+            try
             {
-                await OnMessageCreation(gatewayPayload.MessageCreated);
-                return gatewayPayload.MessageCreated;
+                var gatewayPayload = await RecievePayload();
+
+                if (gatewayPayload.MessageCreated != null)
+                {
+                    await OnMessageCreation(gatewayPayload.MessageCreated);
+                    return gatewayPayload.MessageCreated;
+                }
+                else return null;
             }
-            else return null;
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         protected virtual async Task OnMessageCreation(MessageCreated message)
