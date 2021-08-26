@@ -22,6 +22,15 @@ namespace McBot.Gateway.Payloads
         [JsonProperty("channel_id")]
         public string ChannelId { get; set; }
 
+        [JsonProperty("session_id")]
+        public string SesssionId { get; set; }
+
+        [JsonProperty("user_id")]
+        public string UserId { get; set; }
+
+        [JsonProperty("server_id")]
+        public string ServerId { get; set; }
+
         [JsonProperty("self_mute")]
         public bool SelfMute { get; set; }
 

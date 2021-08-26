@@ -16,15 +16,16 @@ namespace McBot.Core
     public class DiscordWebSocketApi : IDiscordWebSocketApi
     {
         private readonly ClientWebSocket _clientWebSocket;
-        private ClientWebSocket _voiceWebSocket;
+        private readonly ClientWebSocket _voiceWebSocket;
         private readonly IOptions<AppSettings> _options;
 
         public event Respond RespondToCreateMessage;
 
-        public DiscordWebSocketApi(ClientWebSocket clientWebSocket, IOptions<AppSettings> options)
+        public DiscordWebSocketApi(ClientWebSocket clientWebSocket, IOptions<AppSettings> options, ClientWebSocket voiceWebSocket)
         {
             _clientWebSocket = clientWebSocket;
             _options = options;
+            _voiceWebSocket = voiceWebSocket;
         }
 
         public async Task<GatewayHello> ConnectToSocketApi(string uri)
@@ -39,7 +40,20 @@ namespace McBot.Core
                 throw new NullReferenceException("Gateway hello is null something is  not right");
         }
 
-        private async Task SendPayload(GatewayPayload payload)
+        public async Task<VoiceHello> ConnectToVoiceSocket(string uri)
+        {
+            await _voiceWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
+            var payload = await RecieveVoicePayload();
+            if (payload.op == VoiceOpCode.Hello)
+            {
+                Console.WriteLine("test");
+                return payload.VoiceHello;
+            }
+            else
+                throw new NullReferenceException("Gateway hello is null something is  not right");
+        }
+
+        private async Task SendPayload(GatewayPayload payload, ClientWebSocket clientWebSocket)
         {
             try
             {
@@ -48,7 +62,24 @@ namespace McBot.Core
                 var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
                 Console.WriteLine(json);
                 var bytes = Encoding.UTF8.GetBytes(json);
-                await _clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                await clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private async Task SendVoicePayload(VoicePayload payload)
+        {
+            try
+            {
+                var jsonSettings = new JsonSerializerSettings();
+                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
+                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+                Console.WriteLine(json);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await _voiceWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -63,10 +94,10 @@ namespace McBot.Core
                 var gatewayPayload = new GatewayPayload();
                 gatewayPayload.op = OpCode.VoiceStateUpdate;
                 gatewayPayload.d = payload;
-                await SendPayload(gatewayPayload);
+                await SendPayload(gatewayPayload, _clientWebSocket);
 
-                object voiceStateUpdate = null;
-                object voiceServerUpdate = null;
+                VoiceStateUpdate voiceStateUpdate = null;
+                VoiceServerUpdate voiceServerUpdate = null;
 
                 while (voiceServerUpdate == null || voiceServerUpdate == null)
                 {
@@ -79,6 +110,20 @@ namespace McBot.Core
                         voiceServerUpdate = await GetVoiceServerUpdate();
                     }
                 }
+
+                VoicePayload voiceIdentifyPayload = new VoicePayload();
+                voiceIdentifyPayload.op = VoiceOpCode.Identify;
+                VoiceIdentify voiceIdentify = new VoiceIdentify(voiceServerUpdate.GuildId, voiceStateUpdate.UserId, voiceStateUpdate.SesssionId, voiceServerUpdate.Token);
+                voiceIdentifyPayload.d = voiceIdentify;
+                var hello = await ConnectToVoiceSocket("wss://" + voiceServerUpdate.Endpoint);
+
+                await SendVoicePayload(voiceIdentifyPayload);
+                var smt = await RecieveVoicePayload();
+                smt = await RecieveVoicePayload();
+                smt = await RecieveVoicePayload();
+                smt = await RecieveVoicePayload();
+
+                _ = SendVoiceHearthBeat((int)hello.heartbeat_interval);
             }
             catch (Exception ex)
             {
@@ -100,7 +145,7 @@ namespace McBot.Core
 
                 payload.d = dataPayload;
 
-                await SendPayload(payload);
+                await SendPayload(payload, _clientWebSocket);
 
                 var recievedPayload = await RecievePayload();
                 if (recievedPayload.op == OpCode.InvalidSession)
@@ -176,6 +221,19 @@ namespace McBot.Core
             await RespondToCreateMessage?.Invoke(message);
         }
 
+        private async Task SendVoiceHearthBeat(int wait)
+        {
+            while (true)
+            {
+                VoicePayload payload = new VoicePayload();
+                payload.op = VoiceOpCode.Heartbeat;
+                payload.d = new { heartbeat_interval = wait };
+
+                await Task.Delay(wait);
+                await SendVoicePayload(payload);
+            }
+        }
+
         public async Task SendHearthBeat(int wait)
         {
             while (true)
@@ -185,7 +243,34 @@ namespace McBot.Core
                 payload.d = 251;
 
                 await Task.Delay(wait);
-                await SendPayload(payload);
+                await SendPayload(payload, _clientWebSocket);
+            }
+        }
+
+        private async Task<VoicePayload> RecieveVoicePayload()
+        {
+            var buffer = new ArraySegment<byte>(new byte[2048]);
+            WebSocketReceiveResult result;
+            using (var memmoryStream = new MemoryStream())
+            {
+                do
+                {
+                    result = await _voiceWebSocket.ReceiveAsync(buffer, CancellationToken.None);
+                    memmoryStream.Write(buffer.Array, buffer.Offset, result.Count);
+                }
+                while (!result.EndOfMessage);
+
+                VoicePayload payload = null;
+                if (result.MessageType != WebSocketMessageType.Close)
+                {
+                    memmoryStream.Seek(0, SeekOrigin.Begin);
+                    using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
+                    {
+                        payload = JsonConvert.DeserializeObject<VoicePayload>(await reader.ReadToEndAsync());
+                        Console.WriteLine(await reader.ReadToEndAsync());
+                    }
+                }
+                return payload;
             }
         }
 
