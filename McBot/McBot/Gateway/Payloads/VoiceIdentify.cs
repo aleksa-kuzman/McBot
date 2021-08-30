@@ -4,12 +4,13 @@ namespace McBot.Gateway.Payloads
 {
     public class VoiceIdentify
     {
-        public VoiceIdentify(string serverId, string userId, string sessionId, string token)
+        public VoiceIdentify(string serverId, string userId, string sessionId, string token, string endpoint)
         {
             ServerId = serverId;
             UserId = userId;
             SessionId = sessionId;
             Token = token;
+            Endpoint = "wss://" + endpoint;
         }
 
         [JsonProperty("server_id")]
@@ -23,5 +24,7 @@ namespace McBot.Gateway.Payloads
 
         [JsonProperty("token")]
         public string Token { get; set; }
+
+        public string Endpoint { get; set; }
     }
 }

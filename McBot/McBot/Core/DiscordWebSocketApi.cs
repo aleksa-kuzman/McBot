@@ -46,7 +46,6 @@ namespace McBot.Core
             var payload = await RecieveVoicePayload();
             if (payload.op == VoiceOpCode.Hello)
             {
-                Console.WriteLine("test");
                 return payload.VoiceHello;
             }
             else
@@ -87,43 +86,46 @@ namespace McBot.Core
             }
         }
 
+        private async Task<T> WaitForAsync<T>()
+        {
+            T waitedPayload = default;
+            while (waitedPayload is null)
+            {
+                waitedPayload = await GetPayload<T>();
+            }
+
+            return waitedPayload;
+        }
+
+        private async Task SendVoiceStateUpdate(VoiceStateUpdate payload)
+        {
+            var gatewayPayload = new GatewayPayload();
+            gatewayPayload.op = OpCode.VoiceStateUpdate;
+            gatewayPayload.d = payload;
+            await SendPayload(gatewayPayload, _clientWebSocket);
+        }
+
+        private VoicePayload GetVoiceServerInfo(VoiceStateUpdate voiceStateUpdate, VoiceServerUpdate voiceServerUpdate)
+        {
+            VoicePayload voiceIdentifyPayload = new VoicePayload();
+            voiceIdentifyPayload.op = VoiceOpCode.Identify;
+            VoiceIdentify voiceIdentify = new VoiceIdentify(voiceServerUpdate.GuildId, voiceStateUpdate.UserId, voiceStateUpdate.SesssionId, voiceServerUpdate.Token, voiceServerUpdate.Endpoint);
+            voiceIdentifyPayload.d = voiceIdentify;
+
+            return voiceIdentifyPayload;
+        }
+
         public async Task ConnectToVoice(VoiceStateUpdate payload)
         {
             try
             {
-                var gatewayPayload = new GatewayPayload();
-                gatewayPayload.op = OpCode.VoiceStateUpdate;
-                gatewayPayload.d = payload;
-                await SendPayload(gatewayPayload, _clientWebSocket);
+                await SendVoiceStateUpdate(payload);
 
-                VoiceStateUpdate voiceStateUpdate = null;
-                VoiceServerUpdate voiceServerUpdate = null;
+                VoiceStateUpdate voiceStateUpdate = await WaitForAsync<VoiceStateUpdate>();
+                VoiceServerUpdate voiceServerUpdate = await WaitForAsync<VoiceServerUpdate>();
+                var voiceIdentifyPayload = GetVoiceServerInfo(voiceStateUpdate, voiceServerUpdate);
 
-                while (voiceServerUpdate == null || voiceServerUpdate == null)
-                {
-                    if (voiceStateUpdate == null)
-                    {
-                        voiceStateUpdate = await GetVoiceStateUpdate();
-                    }
-                    if (voiceServerUpdate == null)
-                    {
-                        voiceServerUpdate = await GetVoiceServerUpdate();
-                    }
-                }
-
-                VoicePayload voiceIdentifyPayload = new VoicePayload();
-                voiceIdentifyPayload.op = VoiceOpCode.Identify;
-                VoiceIdentify voiceIdentify = new VoiceIdentify(voiceServerUpdate.GuildId, voiceStateUpdate.UserId, voiceStateUpdate.SesssionId, voiceServerUpdate.Token);
-                voiceIdentifyPayload.d = voiceIdentify;
-                var hello = await ConnectToVoiceSocket("wss://" + voiceServerUpdate.Endpoint);
-
-                await SendVoicePayload(voiceIdentifyPayload);
-                var smt = await RecieveVoicePayload();
-                smt = await RecieveVoicePayload();
-                smt = await RecieveVoicePayload();
-                smt = await RecieveVoicePayload();
-
-                _ = SendVoiceHearthBeat((int)hello.heartbeat_interval);
+                await DoVoicePart(voiceIdentifyPayload);
             }
             catch (Exception ex)
             {
@@ -131,6 +133,16 @@ namespace McBot.Core
 
                 throw;
             }
+        }
+
+        private async Task DoVoicePart(VoicePayload payload)
+        {
+            var hello = await ConnectToVoiceSocket(((VoiceIdentify)payload.d).Endpoint);
+
+            await SendVoicePayload(payload);
+            var smt = await RecieveVoicePayload();
+
+            _ = SendVoiceHearthBeat((int)hello.heartbeat_interval);
         }
 
         public async Task<IdentifyRecieveReadyPayload> IdentifyToSocket(string uri)
@@ -161,35 +173,17 @@ namespace McBot.Core
             }
         }
 
-        public async Task<VoiceStateUpdate> GetVoiceStateUpdate()
+        public async Task<T> GetPayload<T>()
         {
             try
             {
                 var gatewayPayload = await RecievePayload();
 
-                if (gatewayPayload.VoiceStateUpdate != null)
+                if (gatewayPayload.GetPayloadType() == typeof(T))
                 {
-                    return gatewayPayload.VoiceStateUpdate;
+                    return gatewayPayload.GetPayload<T>();
                 }
-                else return null;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
-        public async Task<VoiceServerUpdate> GetVoiceServerUpdate()
-        {
-            try
-            {
-                var gatewayPayload = await RecievePayload();
-
-                if (gatewayPayload.VoiceServerUpdate != null)
-                {
-                    return gatewayPayload.VoiceServerUpdate;
-                }
-                else return null;
+                else return default(T);
             }
             catch (Exception ex)
             {

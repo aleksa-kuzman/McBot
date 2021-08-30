@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 
 namespace McBot.Gateway.Payloads
 {
@@ -87,5 +88,22 @@ namespace McBot.Gateway.Payloads
         /// the event name for this payload
         /// </summary>
         public string t { get; set; }
+
+        public Type GetPayloadType()
+        {
+            foreach (var item in GatewayEvents.GetGatewayEvents())
+            {
+                if (item.Value == t)
+                {
+                    return item.Type;
+                }
+            }
+            throw new Exception();
+        }
+
+        public T GetPayload<T>()
+        {
+            return JsonConvert.DeserializeObject<T>(d.ToString());
+        }
     }
 }
