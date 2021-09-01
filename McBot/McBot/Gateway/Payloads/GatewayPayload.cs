@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using McBot.Utils.JsonConverter;
 using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace McBot.Gateway.Payloads
 {
@@ -8,7 +10,8 @@ namespace McBot.Gateway.Payloads
         /// <summary>
         /// Opcode for payload
         /// </summary>
-        public OpCode op { get; set; }
+        [JsonConverter(typeof(EnumerationClassConverter<OpCodeEnumeration>))]
+        public OpCodeEnumeration op { get; set; }
 
         /// <summary>
         /// Event data
@@ -19,8 +22,8 @@ namespace McBot.Gateway.Payloads
         {
             get
             {
-                if (op == OpCode.Ready)
-                    return JsonConvert.DeserializeObject<IdentifyRecieveReadyPayload>(d.ToString());
+                if (op == OpCodeEnumeration.Ready)
+                    return JsonSerializer.Deserialize<IdentifyRecieveReadyPayload>(d.ToString());
                 else
                     return null;
             }
@@ -31,9 +34,9 @@ namespace McBot.Gateway.Payloads
         {
             get
             {
-                if (op == OpCode.Hello)
+                if (op == OpCodeEnumeration.Hello)
                 {
-                    return JsonConvert.DeserializeObject<GatewayHello>(d.ToString());
+                    return JsonSerializer.Deserialize<GatewayHello>(d.ToString());
                 }
                 else
                     return null;
@@ -46,7 +49,7 @@ namespace McBot.Gateway.Payloads
             {
                 if (t != null && t == GatewayEvents.MessageCreated.Value)
                 {
-                    return JsonConvert.DeserializeObject<MessageCreated>(d.ToString());
+                    return JsonSerializer.Deserialize<MessageCreated>(d.ToString());
                 }
                 else
                     return null;
@@ -59,7 +62,7 @@ namespace McBot.Gateway.Payloads
             {
                 if (t != null && t == GatewayEvents.VoiceServerUpdate.Value)
                 {
-                    return JsonConvert.DeserializeObject<VoiceServerUpdate>(d.ToString());
+                    return JsonSerializer.Deserialize<VoiceServerUpdate>(d.ToString());
                 }
                 else
                     return null;
@@ -72,7 +75,7 @@ namespace McBot.Gateway.Payloads
             {
                 if (t != null && t == GatewayEvents.VoiceStateUpdate.Value)
                 {
-                    return JsonConvert.DeserializeObject<VoiceStateUpdate>(d.ToString());
+                    return JsonSerializer.Deserialize<VoiceStateUpdate>(d.ToString());
                 }
                 else
                     return null;
@@ -103,7 +106,7 @@ namespace McBot.Gateway.Payloads
 
         public T GetPayload<T>()
         {
-            return JsonConvert.DeserializeObject<T>(d.ToString());
+            return JsonSerializer.Deserialize<T>(d.ToString());
         }
     }
 }

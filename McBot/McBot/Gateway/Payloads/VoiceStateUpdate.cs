@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace McBot.Gateway.Payloads
 {
@@ -16,25 +16,25 @@ namespace McBot.Gateway.Payloads
             SelfDeaf = selfDeaf;
         }
 
-        [JsonProperty("guild_id")]
+        [JsonPropertyName("guild_id")]
         public string GuildId { get; set; }
 
-        [JsonProperty("channel_id")]
+        [JsonPropertyName("channel_id")]
         public string ChannelId { get; set; }
 
-        [JsonProperty("session_id")]
+        [JsonPropertyName("session_id")]
         public string SesssionId { get; set; }
 
-        [JsonProperty("user_id")]
+        [JsonPropertyName("user_id")]
         public string UserId { get; set; }
 
-        [JsonProperty("server_id")]
+        [JsonPropertyName("server_id")]
         public string ServerId { get; set; }
 
-        [JsonProperty("self_mute")]
+        [JsonPropertyName("self_mute")]
         public bool SelfMute { get; set; }
 
-        [JsonProperty("self_deaf")]
+        [JsonPropertyName("self_deaf")]
         public bool SelfDeaf { get; set; }
     }
 }

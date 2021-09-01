@@ -1,11 +1,11 @@
 ﻿using McBot.Contracts;
 using McBot.Gateway.Payloads;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,14 +30,21 @@ namespace McBot.Core
 
         public async Task<GatewayHello> ConnectToSocketApi(string uri)
         {
-            await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
-            var payload = await RecievePayload();
-            if (payload.op == OpCode.Hello)
+            try
             {
-                return payload.GatewayHello;
+                await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
+                var payload = await RecievePayload();
+                if (payload.op == OpCodeEnumeration.Hello)
+                {
+                    return payload.GatewayHello;
+                }
+                else
+                    throw new NullReferenceException("Gateway hello is null something is  not right");
             }
-            else
-                throw new NullReferenceException("Gateway hello is null something is  not right");
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<VoiceHello> ConnectToVoiceSocket(string uri)
@@ -56,9 +63,9 @@ namespace McBot.Core
         {
             try
             {
-                var jsonSettings = new JsonSerializerSettings();
-                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
-                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+                var jsonSettings = new JsonSerializerOptions { IgnoreNullValues = true };
+
+                var json = JsonSerializer.Serialize(payload, jsonSettings);
                 Console.WriteLine(json);
                 var bytes = Encoding.UTF8.GetBytes(json);
                 await clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -73,9 +80,9 @@ namespace McBot.Core
         {
             try
             {
-                var jsonSettings = new JsonSerializerSettings();
-                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
-                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+                var jsonSettings = new JsonSerializerOptions { IgnoreNullValues = true };
+
+                var json = JsonSerializer.Serialize(payload, jsonSettings);
                 Console.WriteLine(json);
                 var bytes = Encoding.UTF8.GetBytes(json);
                 await _voiceWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -100,7 +107,7 @@ namespace McBot.Core
         private async Task SendVoiceStateUpdate(VoiceStateUpdate payload)
         {
             var gatewayPayload = new GatewayPayload();
-            gatewayPayload.op = OpCode.VoiceStateUpdate;
+            gatewayPayload.op = OpCodeEnumeration.VoiceStateUpdate;
             gatewayPayload.d = payload;
             await SendPayload(gatewayPayload, _clientWebSocket);
         }
@@ -150,7 +157,7 @@ namespace McBot.Core
             try
             {
                 GatewayPayload payload = new GatewayPayload();
-                payload.op = OpCode.Identify;
+                payload.op = OpCodeEnumeration.Identify;
                 var dataPayload = new IdentifyDataPayload();
                 dataPayload.token = _options.Value.BotToken;
                 dataPayload.properties = new IdentifyDataPayloadProperties("linux", "my_library", "MyClient");
@@ -160,7 +167,7 @@ namespace McBot.Core
                 await SendPayload(payload, _clientWebSocket);
 
                 var recievedPayload = await RecievePayload();
-                if (recievedPayload.op == OpCode.InvalidSession)
+                if (recievedPayload.op == OpCodeEnumeration.InvalidSession)
                 {
                     throw new System.Exception("API RETURNED OPCODE 9");
                 }
@@ -233,7 +240,7 @@ namespace McBot.Core
             while (true)
             {
                 GatewayPayload payload = new GatewayPayload();
-                payload.op = OpCode.HeartBeat;
+                payload.op = OpCodeEnumeration.HeartBeat;
                 payload.d = 251;
 
                 await Task.Delay(wait);
@@ -260,7 +267,7 @@ namespace McBot.Core
                     memmoryStream.Seek(0, SeekOrigin.Begin);
                     using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
                     {
-                        payload = JsonConvert.DeserializeObject<VoicePayload>(await reader.ReadToEndAsync());
+                        payload = JsonSerializer.Deserialize<VoicePayload>(await reader.ReadToEndAsync());
                         Console.WriteLine(await reader.ReadToEndAsync());
                     }
                 }
@@ -287,7 +294,7 @@ namespace McBot.Core
                     memmoryStream.Seek(0, SeekOrigin.Begin);
                     using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
                     {
-                        payload = JsonConvert.DeserializeObject<GatewayPayload>(await reader.ReadToEndAsync());
+                        payload = JsonSerializer.Deserialize<GatewayPayload>(await reader.ReadToEndAsync());
                         Console.WriteLine(await reader.ReadToEndAsync());
                     }
                 }
