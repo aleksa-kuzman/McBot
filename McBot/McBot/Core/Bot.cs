@@ -119,18 +119,13 @@ namespace McBot.Core
             var gateway = await _discordApi.GetWebSocketBotGateway();
             var conected = await _discordWebSocketApi.ConnectToSocketApi(gateway.Url);
 
-            if (conected != null)
+            var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
+
+            await StartMcServer();
+
+            while (true)
             {
-                _ = _discordWebSocketApi.SendHearthBeat(conected.heartbeat_interval);
-
-                var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
-
-                await StartMcServer();
-
-                while (true)
-                {
-                    var test = await _discordWebSocketApi.MessageCreatedEvent();
-                }
+                var test = await _discordWebSocketApi.MessageCreatedEvent();
             }
         }
 

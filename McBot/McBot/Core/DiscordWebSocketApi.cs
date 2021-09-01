@@ -15,15 +15,15 @@ namespace McBot.Core
 
     public class DiscordWebSocketApi : IDiscordWebSocketApi
     {
-        private readonly ClientWebSocket _clientWebSocket;
+        private readonly SocketWrapper _wrapper;
         private readonly ClientWebSocket _voiceWebSocket;
         private readonly IOptions<AppSettings> _options;
 
         public event Respond RespondToCreateMessage;
 
-        public DiscordWebSocketApi(ClientWebSocket clientWebSocket, IOptions<AppSettings> options, ClientWebSocket voiceWebSocket)
+        public DiscordWebSocketApi(SocketWrapper wrapper, IOptions<AppSettings> options, ClientWebSocket voiceWebSocket)
         {
-            _clientWebSocket = clientWebSocket;
+            _wrapper = wrapper;
             _options = options;
             _voiceWebSocket = voiceWebSocket;
         }
@@ -32,14 +32,27 @@ namespace McBot.Core
         {
             try
             {
-                await _clientWebSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
-                var payload = await RecievePayload();
-                if (payload.op == OpCodeEnumeration.Hello)
+                var gatewayHello = await _wrapper.ConnectToSocket<GatewayPayload>(uri);
+                if (gatewayHello.op != OpCodeEnumeration.Hello)
                 {
-                    return payload.GatewayHello;
+                    // TODO: handle exceptions better
+                    throw new Exception("Need  to implemetn exception handling");
                 }
-                else
-                    throw new NullReferenceException("Gateway hello is null something is  not right");
+
+                GatewayPayload heartBeatPayload = new GatewayPayload();
+                heartBeatPayload.op = OpCodeEnumeration.HeartBeat;
+                heartBeatPayload.d = 251;
+
+                var connected = gatewayHello.GatewayHello;
+
+                if (connected == null)
+                {
+                    // TODO: HandleExceptions
+                    throw new Exception("Something 12345");
+                }
+                _ = _wrapper.SendHearthBeat(heartBeatPayload, gatewayHello.GatewayHello.heartbeat_interval);
+
+                return gatewayHello.GatewayHello;
             }
             catch (Exception ex)
             {
@@ -59,23 +72,6 @@ namespace McBot.Core
                 throw new NullReferenceException("Gateway hello is null something is  not right");
         }
 
-        private async Task SendPayload(GatewayPayload payload, ClientWebSocket clientWebSocket)
-        {
-            try
-            {
-                var jsonSettings = new JsonSerializerOptions { IgnoreNullValues = true };
-
-                var json = JsonSerializer.Serialize(payload, jsonSettings);
-                Console.WriteLine(json);
-                var bytes = Encoding.UTF8.GetBytes(json);
-                await clientWebSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
         private async Task SendVoicePayload(VoicePayload payload)
         {
             try
@@ -93,23 +89,12 @@ namespace McBot.Core
             }
         }
 
-        private async Task<T> WaitForAsync<T>()
-        {
-            T waitedPayload = default;
-            while (waitedPayload is null)
-            {
-                waitedPayload = await GetPayload<T>();
-            }
-
-            return waitedPayload;
-        }
-
         private async Task SendVoiceStateUpdate(VoiceStateUpdate payload)
         {
             var gatewayPayload = new GatewayPayload();
             gatewayPayload.op = OpCodeEnumeration.VoiceStateUpdate;
             gatewayPayload.d = payload;
-            await SendPayload(gatewayPayload, _clientWebSocket);
+            await _wrapper.SendPayload<GatewayPayload>(gatewayPayload);
         }
 
         private VoicePayload GetVoiceServerInfo(VoiceStateUpdate voiceStateUpdate, VoiceServerUpdate voiceServerUpdate)
@@ -128,8 +113,8 @@ namespace McBot.Core
             {
                 await SendVoiceStateUpdate(payload);
 
-                VoiceStateUpdate voiceStateUpdate = await WaitForAsync<VoiceStateUpdate>();
-                VoiceServerUpdate voiceServerUpdate = await WaitForAsync<VoiceServerUpdate>();
+                VoiceStateUpdate voiceStateUpdate = await _wrapper.WaitForAsync<VoiceStateUpdate>();
+                VoiceServerUpdate voiceServerUpdate = await _wrapper.WaitForAsync<VoiceServerUpdate>();
                 var voiceIdentifyPayload = GetVoiceServerInfo(voiceStateUpdate, voiceServerUpdate);
 
                 await DoVoicePart(voiceIdentifyPayload);
@@ -164,9 +149,10 @@ namespace McBot.Core
 
                 payload.d = dataPayload;
 
-                await SendPayload(payload, _clientWebSocket);
+                await _wrapper.SendPayload(payload);
 
-                var recievedPayload = await RecievePayload();
+                var recievedPayload = await _wrapper.RecievePayload<GatewayPayload>();
+
                 if (recievedPayload.op == OpCodeEnumeration.InvalidSession)
                 {
                     throw new System.Exception("API RETURNED OPCODE 9");
@@ -180,29 +166,11 @@ namespace McBot.Core
             }
         }
 
-        public async Task<T> GetPayload<T>()
-        {
-            try
-            {
-                var gatewayPayload = await RecievePayload();
-
-                if (gatewayPayload.GetPayloadType() == typeof(T))
-                {
-                    return gatewayPayload.GetPayload<T>();
-                }
-                else return default(T);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
         public async Task<MessageCreated> MessageCreatedEvent()
         {
             try
             {
-                var gatewayPayload = await RecievePayload();
+                var gatewayPayload = await _wrapper.RecievePayload<GatewayPayload>();
 
                 if (gatewayPayload.MessageCreated != null)
                 {
@@ -235,19 +203,6 @@ namespace McBot.Core
             }
         }
 
-        public async Task SendHearthBeat(int wait)
-        {
-            while (true)
-            {
-                GatewayPayload payload = new GatewayPayload();
-                payload.op = OpCodeEnumeration.HeartBeat;
-                payload.d = 251;
-
-                await Task.Delay(wait);
-                await SendPayload(payload, _clientWebSocket);
-            }
-        }
-
         private async Task<VoicePayload> RecieveVoicePayload()
         {
             var buffer = new ArraySegment<byte>(new byte[2048]);
@@ -268,33 +223,6 @@ namespace McBot.Core
                     using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
                     {
                         payload = JsonSerializer.Deserialize<VoicePayload>(await reader.ReadToEndAsync());
-                        Console.WriteLine(await reader.ReadToEndAsync());
-                    }
-                }
-                return payload;
-            }
-        }
-
-        private async Task<GatewayPayload> RecievePayload()
-        {
-            var buffer = new ArraySegment<byte>(new byte[2048]);
-            WebSocketReceiveResult result;
-            using (var memmoryStream = new MemoryStream())
-            {
-                do
-                {
-                    result = await _clientWebSocket.ReceiveAsync(buffer, CancellationToken.None);
-                    memmoryStream.Write(buffer.Array, buffer.Offset, result.Count);
-                }
-                while (!result.EndOfMessage);
-
-                GatewayPayload payload = null;
-                if (result.MessageType != WebSocketMessageType.Close)
-                {
-                    memmoryStream.Seek(0, SeekOrigin.Begin);
-                    using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
-                    {
-                        payload = JsonSerializer.Deserialize<GatewayPayload>(await reader.ReadToEndAsync());
                         Console.WriteLine(await reader.ReadToEndAsync());
                     }
                 }

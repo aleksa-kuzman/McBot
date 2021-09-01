@@ -21,7 +21,7 @@ namespace McBot.Core
             _logger = logger;
         }
 
-        private async Task SendPayload<T>(T payload) where T : Payload
+        public async Task SendPayload<T>(T payload) where T : Payload
         {
             try
             {
@@ -43,10 +43,10 @@ namespace McBot.Core
             await _socket.ConnectAsync(new Uri(uri), CancellationToken.None);
             var payload = await RecievePayload<T>();
 
-            return JsonSerializer.Deserialize<T>(payload.d.ToString());
+            return payload;
         }
 
-        private async Task SendHearthBeat<T>(T payload, int wait) where T : Payload, new()
+        public async Task SendHearthBeat<T>(T payload, int wait) where T : Payload, new()
         {
             while (true)
             {
@@ -57,7 +57,36 @@ namespace McBot.Core
             }
         }
 
-        private async Task<T> RecievePayload<T>()
+        public async Task<T> WaitForAsync<T>()
+        {
+            T waitedPayload = default;
+            while (waitedPayload is null)
+            {
+                waitedPayload = await GetPayload<T>();
+            }
+
+            return waitedPayload;
+        }
+
+        public async Task<T> GetPayload<T>()
+        {
+            try
+            {
+                var gatewayPayload = await RecievePayload<GatewayPayload>();
+
+                if (gatewayPayload.GetPayloadType() == typeof(T))
+                {
+                    return gatewayPayload.GetPayload<T>();
+                }
+                else return default(T);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<T> RecievePayload<T>()
         {
             var buffer = new ArraySegment<byte>(new byte[2048]);
             WebSocketReceiveResult result;

@@ -5,18 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace McBot.Gateway.Payloads
 {
-    public class GatewayPayload
+    public class GatewayPayload : Payload
     {
         /// <summary>
         /// Opcode for payload
         /// </summary>
         [JsonConverter(typeof(EnumerationClassConverter<OpCodeEnumeration>))]
         public OpCodeEnumeration op { get; set; }
-
-        /// <summary>
-        /// Event data
-        /// </summary>
-        public object d { get; set; }
 
         public IdentifyRecieveReadyPayload Ready
         {
@@ -81,16 +76,6 @@ namespace McBot.Gateway.Payloads
                     return null;
             }
         }
-
-        /// <summary>
-        /// sequence number, used for resuming sessions and heartbeats
-        /// </summary>
-        public int? s { get; set; }
-
-        /// <summary>
-        /// the event name for this payload
-        /// </summary>
-        public string t { get; set; }
 
         public Type GetPayloadType()
         {
