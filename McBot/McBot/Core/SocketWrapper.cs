@@ -1,9 +1,10 @@
 ﻿using McBot.Gateway.Payloads;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,19 +13,21 @@ namespace McBot.Core
     public class SocketWrapper
     {
         private readonly ClientWebSocket _socket;
+        private readonly ILogger<SocketWrapper> _logger;
 
-        public SocketWrapper(ClientWebSocket socket)
+        public SocketWrapper(ClientWebSocket socket, ILogger<SocketWrapper> logger)
         {
             _socket = socket;
+            _logger = logger;
         }
 
         private async Task SendPayload<T>(T payload) where T : Payload
         {
             try
             {
-                var jsonSettings = new JsonSerializerSettings();
-                jsonSettings.NullValueHandling = NullValueHandling.Ignore;
-                var json = JsonConvert.SerializeObject(payload, Formatting.Indented, jsonSettings);
+                var jsonSettings = new JsonSerializerOptions { IgnoreNullValues = true };
+                var json = JsonSerializer.Serialize(payload, jsonSettings);
+
                 Console.WriteLine(json);
                 var bytes = Encoding.UTF8.GetBytes(json);
                 await _socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -35,12 +38,12 @@ namespace McBot.Core
             }
         }
 
-        public async Task<T> ConnectToVoiceSocket<T>(string uri) where T : Payload
+        public async Task<T> ConnectToSocket<T>(string uri) where T : Payload
         {
             await _socket.ConnectAsync(new Uri(uri), CancellationToken.None);
-            var payload = await RecieveVoicePayload<T>();
+            var payload = await RecievePayload<T>();
 
-            return JsonConvert.DeserializeObject<T>(payload.d.ToString());
+            return JsonSerializer.Deserialize<T>(payload.d.ToString());
         }
 
         private async Task SendHearthBeat<T>(T payload, int wait) where T : Payload, new()
@@ -54,7 +57,7 @@ namespace McBot.Core
             }
         }
 
-        private async Task<T> RecieveVoicePayload<T>()
+        private async Task<T> RecievePayload<T>()
         {
             var buffer = new ArraySegment<byte>(new byte[2048]);
             WebSocketReceiveResult result;
@@ -73,7 +76,7 @@ namespace McBot.Core
                     memmoryStream.Seek(0, SeekOrigin.Begin);
                     using (var reader = new StreamReader(memmoryStream, Encoding.UTF8))
                     {
-                        payload = JsonConvert.DeserializeObject<T>(await reader.ReadToEndAsync());
+                        payload = JsonSerializer.Deserialize<T>(await reader.ReadToEndAsync());
                         Console.WriteLine(await reader.ReadToEndAsync());
                     }
                 }
