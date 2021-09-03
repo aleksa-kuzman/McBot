@@ -14,6 +14,6 @@ namespace McBot.Contracts
 
         public event Respond RespondToCreateMessage;
 
-        Task ConnectToVoice(VoiceStateUpdate payload);
+        Task<VoicePayload> ConnectToVoice(VoiceStateUpdate payload);
     }
 }

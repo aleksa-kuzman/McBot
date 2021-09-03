@@ -1,36 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿using McBot.Utils.JsonConverter;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace McBot.Gateway.Payloads
 {
-    public class VoicePayload
+    public class VoicePayload : Payload
     {
         /// <summary>
         /// Opcode for payload
         /// </summary>
-        public VoiceOpCode op { get; set; }
-
-        /// <summary>
-        /// Event data
-        /// </summary>
-        public object d { get; set; }
-
-        /// <summary>
-        /// sequence number, used for resuming sessions and heartbeats
-        /// </summary>
-        public int? s { get; set; }
-
-        /// <summary>
-        /// the event name for this payload
-        /// </summary>
-        public string t { get; set; }
+        [JsonConverter(typeof(EnumerationClassConverter<VoiceOpCodeEnumeration>))]
+        public VoiceOpCodeEnumeration op { get; set; }
 
         public VoiceHello VoiceHello
         {
             get
             {
-                if (op == VoiceOpCode.Hello)
+                if (op == VoiceOpCodeEnumeration.Hello)
                 {
-                    return JsonConvert.DeserializeObject<VoiceHello>(d.ToString());
+                    return JsonSerializer.Deserialize<VoiceHello>(d.ToString());
                 }
                 else
                     return null;

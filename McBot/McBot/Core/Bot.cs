@@ -16,15 +16,22 @@ namespace McBot.Core
         private readonly IDiscordWebSocketApi _discordWebSocketApi;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IOptions<AppSettings> _options;
+        private readonly DiscordVoiceApi _voiceApi;
         private bool forcedExit;
         private Process Server;
 
-        public Bot(IDiscordHttpApi discordApi, IDiscordWebSocketApi discordWebSocketApi, IHttpClientFactory httpClientFactory, IOptions<AppSettings> options)
+        public Bot(IDiscordHttpApi discordApi,
+            IDiscordWebSocketApi discordWebSocketApi,
+            IHttpClientFactory httpClientFactory,
+            DiscordVoiceApi voiceApi,
+            IOptions<AppSettings> options
+            )
         {
             _discordApi = discordApi;
             _discordWebSocketApi = discordWebSocketApi;
             _httpClientFactory = httpClientFactory;
             _options = options;
+            _voiceApi = voiceApi;
             Server = new Process();
             forcedExit = true;
 
@@ -53,7 +60,9 @@ namespace McBot.Core
             _ = _discordApi.CreateMessage(new Message("Connecting to voice channel", false, null), _options.Value.ChannelId);
 
             var voiceStateUpdate = new VoiceStateUpdate("741382226746409011", "741382227249856545", false, false);
-            await _discordWebSocketApi.ConnectToVoice(voiceStateUpdate);
+            var voicePayload = await _discordWebSocketApi.ConnectToVoice(voiceStateUpdate);
+
+            await _voiceApi.IdentifyToVoice(voicePayload);
         }
 
         private async Task VoiceConnectRespond(MessageCreated message)

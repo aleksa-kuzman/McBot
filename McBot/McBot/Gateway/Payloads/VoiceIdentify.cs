@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace McBot.Gateway.Payloads
 {
@@ -13,18 +13,19 @@ namespace McBot.Gateway.Payloads
             Endpoint = "wss://" + endpoint;
         }
 
-        [JsonProperty("server_id")]
+        [JsonPropertyName("server_id")]
         public string ServerId { get; set; }
 
-        [JsonProperty("user_id")]
+        [JsonPropertyName("user_id")]
         public string UserId { get; set; }
 
-        [JsonProperty("session_id")]
+        [JsonPropertyName("session_id")]
         public string SessionId { get; set; }
 
-        [JsonProperty("token")]
+        [JsonPropertyName("token")]
         public string Token { get; set; }
 
+        [JsonIgnore]
         public string Endpoint { get; set; }
     }
 }
