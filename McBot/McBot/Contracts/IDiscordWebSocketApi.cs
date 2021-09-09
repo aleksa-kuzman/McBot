@@ -1,5 +1,6 @@
 ﻿using McBot.Core;
 using McBot.Gateway.Payloads;
+using McBot.Voice.Payloads;
 using System.Threading.Tasks;
 
 namespace McBot.Contracts

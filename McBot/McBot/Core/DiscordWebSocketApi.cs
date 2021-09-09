@@ -1,5 +1,6 @@
 ﻿using McBot.Contracts;
 using McBot.Gateway.Payloads;
+using McBot.Voice.Payloads;
 using Microsoft.Extensions.Options;
 using System;
 using System.Net.WebSockets;

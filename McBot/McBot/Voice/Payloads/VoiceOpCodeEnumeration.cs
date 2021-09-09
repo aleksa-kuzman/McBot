@@ -1,6 +1,6 @@
 ﻿using McBot.Core;
 
-namespace McBot.Gateway.Payloads
+namespace McBot.Voice.Payloads
 {
     public class VoiceOpCodeEnumeration : EnumerationBase
     {

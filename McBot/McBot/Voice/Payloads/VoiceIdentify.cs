@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace McBot.Gateway.Payloads
+namespace McBot.Voice.Payloads
 {
     public class VoiceIdentify
     {

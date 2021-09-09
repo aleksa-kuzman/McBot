@@ -1,4 +1,5 @@
-﻿using McBot.Utils.JsonConverter;
+﻿using McBot.Core;
+using McBot.Utils.JsonConverter;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;

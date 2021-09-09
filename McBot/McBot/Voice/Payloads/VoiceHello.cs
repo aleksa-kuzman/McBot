@@ -1,4 +1,4 @@
-﻿namespace McBot.Gateway.Payloads
+﻿namespace McBot.Voice.Payloads
 {
     public class VoiceHello
     {

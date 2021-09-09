@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Net.Sockets;
 
 namespace McBot.Worker
 {
@@ -47,6 +48,7 @@ namespace McBot.Worker
                     services.AddTransient(typeof(Bot));
                     services.AddTransient(typeof(SocketWrapper));
                     services.AddTransient(typeof(DiscordVoiceApi));
+                    services.AddTransient(typeof(UdpClient));
                     services.AddHostedService<Worker>();
                 });
     }

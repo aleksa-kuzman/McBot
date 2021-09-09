@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using McBot.Gateway.Payloads;
+using Newtonsoft.Json;
 using System;
 
-namespace McBot.Gateway.Payloads
+namespace McBot.Core
 {
     public class Payload
     {

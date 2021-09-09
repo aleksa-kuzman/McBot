@@ -1,8 +1,9 @@
-﻿using McBot.Utils.JsonConverter;
+﻿using McBot.Core;
+using McBot.Utils.JsonConverter;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace McBot.Gateway.Payloads
+namespace McBot.Voice.Payloads
 {
     public class VoicePayload : Payload
     {
@@ -19,6 +20,20 @@ namespace McBot.Gateway.Payloads
                 if (op == VoiceOpCodeEnumeration.Hello)
                 {
                     return JsonSerializer.Deserialize<VoiceHello>(d.ToString());
+                }
+                else
+                    return null;
+            }
+        }
+
+        public VoiceReady VoiceReady
+        {
+            get
+            {
+                if (op == VoiceOpCodeEnumeration.Ready)
+                {
+                    var str = d.ToString();
+                    return JsonSerializer.Deserialize<VoiceReady>(str);
                 }
                 else
                     return null;

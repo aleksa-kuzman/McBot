@@ -44,12 +44,6 @@ namespace McBot.Gateway.Payloads
             }
 
             return events;
-
-            /*  return new List<GatewayEvents>() {
-                  MessageCreated,
-                  VoiceServerUpdate,
-                  VoiceStateUpdate,
-              };*/
         }
     }
 }
