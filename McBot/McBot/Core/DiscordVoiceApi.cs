@@ -44,7 +44,7 @@ namespace McBot.Core
 
                 _ = _wrapper.SendHearthBeat(heartBeatPayload, (int)hello.VoiceHello.heartbeat_interval);
 
-                var ipPortDiscovery = ConnectToUdp(readyData);
+                var ipPortDiscovery = await ConnectToUdp(readyData);
 
                 var sessionDescription = await SelectProtocol(ipPortDiscovery);
             }
@@ -54,7 +54,7 @@ namespace McBot.Core
             }
         }
 
-        public async Task<VoicePayload> SelectProtocol(IpDiscovery ipPortDiscovery)
+        public async Task<SessionDescription> SelectProtocol(IpDiscovery ipPortDiscovery)
         {
             SelectPayloadProtocol selectPayload = new SelectPayloadProtocol()
             {
@@ -75,10 +75,10 @@ namespace McBot.Core
             await _wrapper.SendPayload<VoicePayload>(payload);
             var sessionDescription = await _wrapper.RecievePayload<VoicePayload>();
 
-            return sessionDescription;
+            return sessionDescription.SessionDescription;
         }
 
-        public IpDiscovery ConnectToUdp(VoiceReady ready)
+        public async Task<IpDiscovery> ConnectToUdp(VoiceReady ready)
         {
             try
             {
@@ -99,15 +99,16 @@ namespace McBot.Core
                 var requestData = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
 
                 var serverEp = new IPEndPoint(IPAddress.Any, 0);
-                _udpClient.Send(requestData, request.Length);
+                await _udpClient.SendAsync(requestData, request.Length);
 
-                if (_udpClient.Available > 0)
+                Console.WriteLine("Available on client: " + _udpClient.Available);
+                while (_udpClient.Available == 0)
                 {
-                    var bytes = _udpClient.Receive(ref serverEp);
-                    IpDiscovery discovery = new IpDiscovery(bytes);
-
-                    return discovery;
                 }
+                var bytes = _udpClient.Receive(ref serverEp);
+                IpDiscovery discovery = new IpDiscovery(bytes);
+
+                return discovery;
 
                 throw new Exception("Ip not discovered");
             }
