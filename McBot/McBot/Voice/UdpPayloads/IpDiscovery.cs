@@ -31,10 +31,11 @@ namespace McBot.Voice.UdpPayloads
             }
             var ssrc = bytes[0..4];
             Array.Reverse(ssrc);
-            Address = bytes[4..68];
+
             var port = bytes[68..70];
             Array.Reverse(port);
 
+            Address = bytes[4..68];
             SSRC = BitConverter.ToUInt32(ssrc);
             Port = BitConverter.ToUInt16(port);
         }

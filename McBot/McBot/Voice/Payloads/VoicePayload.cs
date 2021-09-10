@@ -39,5 +39,19 @@ namespace McBot.Voice.Payloads
                     return null;
             }
         }
+
+        //public SelectPayloadProtocol SelectProtocol
+        // {
+        //     get
+        //     {
+        //         if (op == VoiceOpCodeEnumeration.SelectProtocol)
+        //         {
+        //             var str = d.ToString();
+        //             return JsonSerializer.Deserialize<SelectPayloadProtocol>(str);
+        //         }
+        //         else
+        //             return null;
+        //     }
+        // }
     }
 }
