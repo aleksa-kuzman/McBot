@@ -49,6 +49,7 @@ namespace McBot.Worker
                     services.AddTransient(typeof(SocketWrapper));
                     services.AddTransient(typeof(DiscordVoiceApi));
                     services.AddTransient(typeof(UdpClient));
+                    services.AddTransient(typeof(Random));
                     services.AddHostedService<Worker>();
                 });
     }

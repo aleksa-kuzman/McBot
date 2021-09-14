@@ -51,8 +51,6 @@ namespace McBot.Core
             return ipAddress;
         }
 
-        // var response = await _discordApi.CreateMessage(new Message(message, false, null), channelId);
-
         private async Task VoiceConnect()
         {
             var gateway = await _discordApi.GetWebSocketBotGateway();
@@ -130,7 +128,8 @@ namespace McBot.Core
 
             var identification = await _discordWebSocketApi.IdentifyToSocket(gateway.Url);
 
-            await StartMcServer();
+            // TODO: uncomment this later
+            // await StartMcServer();
 
             while (true)
             {
