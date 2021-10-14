@@ -1,10 +1,10 @@
-﻿using Concentus.Structs;
-using McBot.Extensions;
+﻿using McBot.Extensions;
 using McBot.Voice.Payloads;
 using McBot.Voice.UdpPayloads;
 using Microsoft.Extensions.Options;
 using NaCl;
 using NAudio.Wave;
+using OpusDotNet;
 using System;
 using System.IO;
 using System.Linq;
@@ -71,7 +71,7 @@ namespace McBot.Core
                 speaking.d = speakingData;
                 await _wrapper.SendPayload(speaking);
 
-                LoadVoiceFile("Test.wav", readyData.Ssrc, sessionDescription.SecretKey);
+                LoadVoiceFile("Test2.wav", readyData.Ssrc, sessionDescription.SecretKey);
 
                 ((Speaking)speaking.d).SpeakingFlag = 0;
                 await _wrapper.SendPayload(speaking);
@@ -174,32 +174,31 @@ namespace McBot.Core
 
             var shortArray = BytesToShorts(pcmChunk, 0, pcmChunk.Length);
 
-            OpusEncoder encoder = new OpusEncoder(48000, 2, Concentus.Enums.OpusApplication.OPUS_APPLICATION_AUDIO);
+            OpusEncoder encoder = new OpusEncoder(Application.VoIP, 48000, 2);
             var a = encoder.Bitrate;
 
             // 48000 / 1000 * 20  * 2 kanala znaci 960
-            int frameSize = 960;
+            int frameSize = 960 * 2;
 
             byte[] outputBuffer = new byte[3000];
 
             var startingSequence = (ushort)_random.Next(0, 1233);
-
-            var totalPacketSize = 0;
+            var timestamp = (ushort)_random.Next(0, 1233);
 
             int thisPacketSize = 0;
             //
             //
             //
 
-
             for (int i = 0; i < shortArray.Length - frameSize; i = i + frameSize)
             {
-               var currentChunk = shortArray.Skip(i).Take(frameSize).ToArray();
-                thisPacketSize = encoder.Encode(currentChunk, 0, frameSize, outputBuffer,0, outputBuffer.Length);
+                var currentChunk = pcmChunk.Skip(i).Take(frameSize).ToArray();
+                thisPacketSize = encoder.Encode(currentChunk, currentChunk.Length, outputBuffer, outputBuffer.Length);
 
                 VoicePacket voicePacket = new VoicePacket();
                 voicePacket.Sequence = startingSequence.ConvertToBigEndian();
                 voicePacket.SSRC = ((uint)ssrc).ConvertToBigEndian();
+                voicePacket.Timestamp = timestamp;
 
                 byte[] nonce = CreateNonce(voicePacket);
 
@@ -212,71 +211,10 @@ namespace McBot.Core
                 Array.Clear(outputBuffer, 0, outputBuffer.Length);
                 Array.Clear(currentChunk, 0, currentChunk.Length);
                 startingSequence++;
+                timestamp += 960;
             }
 
             reader.Dispose();
-
-            ////bitrate = sampleRate * bitDepth
-            //OpusEncoder encoder = OpusEncoder.Create(48000, 2, Concentus.Enums.OpusApplication.OPUS_APPLICATION_VOIP);
-            //encoder.Bitrate = 12000;
-
-            //// 48000 / 1000 * 20 znaci 960
-            //int frameSize = 960;
-
-            //byte[] outputBuffer = new byte[3000];
-
-            //var startingSequence = (ushort)_random.Next(0, 1233);
-
-            //var totalPacketSize = 0;
-
-            //int thisPacketSize = 0;
-            /* for (int i = 0; i < inputFloatArray.Length - 1920; i = i + 1920)
-             {
-                 //encoding
-                 var voicePacket = new VoicePacket();
-                 if (i > 82000)
-                 {
-                 }
-                 thisPacketSize = encoder.Encode(inputFloatArray, i, frameSize, outputBuffer, 0, outputBuffer.Length);
-
-                 totalPacketSize += thisPacketSize;
-
-                 voicePacket.Sequence = startingSequence.ConvertToBigEndian();
-                 voicePacket.SSRC = ((uint)ssrc).ConvertToBigEndian();
-
-                 //encryption
-
-                 var cipher = new byte[outputBuffer.Length + XSalsa20Poly1305.TagLength];
-                 XSalsa20Poly1305 xSalsa20Poly1305 = new XSalsa20Poly1305(key);
-
-                 byte[] nonce = new byte[24];
-
-                 var arraySsrc = BitConverter.GetBytes(voicePacket.SSRC);
-                 var arrayTimestamp = BitConverter.GetBytes(voicePacket.Timestamp);
-                 var arraySeq = BitConverter.GetBytes(voicePacket.Sequence);
-
-                 BinaryFormatter bf = new BinaryFormatter();
-
-                 nonce[0] = voicePacket.VersionFlags;
-                 nonce[1] = voicePacket.PayloadType;
-
-                 Buffer.BlockCopy(arraySeq, 0, nonce, 2, arraySeq.Length);
-                 Buffer.BlockCopy(arrayTimestamp, 0, nonce, 4, arrayTimestamp.Length);
-                 Buffer.BlockCopy(arraySsrc, 0, nonce, 8, arraySsrc.Length);
-
-                 using (MemoryStream ms = new MemoryStream())
-                 {
-                     bf.Serialize(ms, voicePacket);
-                     nonce = ms.ToArray();
-                 }
-
-                 xSalsa20Poly1305.Encrypt(cipher, outputBuffer, nonce);
-
-                 _udpClient.Send(cipher, cipher.Length);
-
-                 Array.Clear(outputBuffer, 0, outputBuffer.Length);
-                 startingSequence++;
-             }*/
 
             Console.WriteLine("asdf");
         }
